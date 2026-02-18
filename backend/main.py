@@ -22,12 +22,7 @@ app = FastAPI(
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
-     allow_origins=[
-        "http://localhost:3000",
-        "http://localhost:5000",
-        "https://hrms-lite-gx4p.vercel.app/",  # Your Vercel URL (after deployment)
-        # "https://hrms-lite-frontend.vercel.app"  # Alternative
-    ],
+    allow_origins = ["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
