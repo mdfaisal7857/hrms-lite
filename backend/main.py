@@ -1,15 +1,13 @@
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from typing import List, Optional
-from datetime import datetime, date
+from typing import Optional
+from datetime import datetime
 from bson import ObjectId
-import traceback
 
 from database import connect_to_mongo, close_mongo_connection, get_database
 from models import (
-    EmployeeCreate, EmployeeInDB, EmployeeResponse,
-    AttendanceCreate, AttendanceInDB, AttendanceResponse
+    EmployeeCreate, AttendanceCreate
 )
 
 # Initialize FastAPI
@@ -19,13 +17,21 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS configuration
+# ========== CORS CONFIGURATION - FIXED ==========
 app.add_middleware(
     CORSMiddleware,
-    allow_origins = ["*"],
+    allow_origins=[
+        "https://hrms-lite-gx4p.vercel.app",  # Your Vercel frontend
+        "http://localhost:3000",
+        "http://localhost:5000",
+        "https://hrms-lite.vercel.app",
+        "*"  # Temporary - remove after testing
+    ],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],  # Explicit methods
+    allow_headers=["Content-Type", "Authorization", "Accept"],
+    expose_headers=["*"],
+    max_age=600  # Cache preflight requests for 10 minutes
 )
 
 # ========== DATABASE EVENTS ==========
@@ -48,7 +54,7 @@ def serialize_doc(doc):
         doc["_id"] = str(doc["_id"])
     return doc
 
-# ========== EMPLOYEE APIs ==========
+# ========== ROOT ENDPOINT ==========
 
 @app.get("/")
 async def root():
@@ -63,6 +69,23 @@ async def root():
             "attendance": "/api/attendance"
         }
     }
+
+# ========== OPTIONS HANDLER (重要!) ==========
+@app.options("/{rest_of_path:path}")
+async def preflight_handler(rest_of_path: str):
+    """Handle OPTIONS requests for CORS preflight"""
+    return JSONResponse(
+        content={"message": "OK"},
+        headers={
+            "Access-Control-Allow-Origin": "https://hrms-lite-gx4p.vercel.app",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization, Accept",
+            "Access-Control-Allow-Credentials": "true",
+            "Access-Control-Max-Age": "600",
+        }
+    )
+
+# ========== EMPLOYEE APIs ==========
 
 @app.get("/api/employees", response_model=dict)
 async def get_all_employees():
