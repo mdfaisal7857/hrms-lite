@@ -25,8 +25,8 @@ app.add_middleware(
      allow_origins=[
         "http://localhost:3000",
         "http://localhost:5000",
-        "https://vercel.com/faisals-projects-c69451ab/hrms-lite",  # Your Vercel URL (after deployment)
-        "https://hrms-lite-frontend.vercel.app"  # Alternative
+        "https://hrms-lite-gx4p.vercel.app/",  # Your Vercel URL (after deployment)
+        # "https://hrms-lite-frontend.vercel.app"  # Alternative
     ],
     allow_credentials=True,
     allow_methods=["*"],
