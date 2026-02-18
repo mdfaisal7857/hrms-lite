@@ -37,7 +37,7 @@ class EmployeeInDB(EmployeeBase):
     class Config:
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
-         json_schema_extra = {
+        json_schema_extra = {
             "example": {
                 "employee_id": "EMP001",
                 "full_name": "John Doe",
