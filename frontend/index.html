@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HRMS Lite - FastAPI + MongoDB</title>
+    <style>
+        /* Same CSS as before - copy from your existing index.html */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            background: white;
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .tab-btn {
+            padding: 12px 24px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            color: #666;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+        .tab-btn:hover {
+            background: #f0f2f5;
+            color: #667eea;
+        }
+        .tab-btn.active {
+            background: #667eea;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .card h2 {
+            color: #444;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #f0f2f5;
+            padding-bottom: 10px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #5a67d8;
+        }
+        .btn-danger {
+            background: #f56565;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #e53e3e;
+        }
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #38a169;
+        }
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.9em;
+        }
+        .table-container {
+            overflow-x: auto;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+        th {
+            background: #f7fafc;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #4a5568;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        tr:hover {
+            background: #f7fafc;
+        }
+        .badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            display: inline-block;
+        }
+        .badge-present {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        .badge-absent {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+        }
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-left: 10px;
+            border: 3px solid #e2e8f0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #a0aec0;
+        }
+        .empty-state span {
+            font-size: 4em;
+            margin-bottom: 20px;
+            display: block;
+        }
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .alert-success {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+        .alert-error {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #fc8181;
+        }
+        @media (max-width: 768px) {
+            .tabs {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>HRMS Lite</h1>
+            <p>FastAPI + MongoDB Edition</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('employees', event)">👥 Employees</button>
+            <button class="tab-btn" onclick="switchTab('attendance', event)">📅 Attendance</button>
+        </div>
+
+        <div id="alertContainer"></div>
+
+        <!-- Employees Tab -->
+        <div id="employeesTab" class="tab-content active">
+            <div class="card">
+                <h2>Add New Employee</h2>
+                <form id="employeeForm" onsubmit="addEmployee(event)">
+                    <div class="form-group">
+                        <label>Employee ID *</label>
+                        <input type="text" id="employeeId" class="form-control" required placeholder="e.g., EMP001">
+                    </div>
+                    <div class="form-group">
+                        <label>Full Name *</label>
+                        <input type="text" id="fullName" class="form-control" required placeholder="e.g., John Doe">
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address *</label>
+                        <input type="email" id="email" class="form-control" required placeholder="e.g., john@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Department *</label>
+                        <select id="department" class="form-control" required>
+                            <option value="">Select Department</option>
+                            <option value="Engineering">Engineering</option>
+                            <option value="Marketing">Marketing</option>
+                            <option value="Sales">Sales</option>
+                            <option value="HR">Human Resources</option>
+                            <option value="Finance">Finance</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Employee</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>Employee List</h2>
+                <div id="employeesLoading" class="loading">Loading employees...</div>
+                <div id="employeesEmpty" class="empty-state" style="display: none;">
+                    <span>👥</span>
+                    No employees found. Add your first employee above!
+                </div>
+                <div id="employeesTable" style="display: none;">
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Department</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="employeesBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Attendance Tab -->
+        <div id="attendanceTab" class="tab-content">
+            <div class="card">
+                <h2>Mark Attendance</h2>
+                <form id="attendanceForm" onsubmit="markAttendance(event)">
+                    <div class="form-group">
+                        <label>Select Employee *</label>
+                        <select id="attendanceEmployee" class="form-control" required>
+                            <option value="">Choose an employee</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Date *</label>
+                        <input type="date" id="attendanceDate" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Status *</label>
+                        <select id="attendanceStatus" class="form-control" required>
+                            <option value="Present">Present</option>
+                            <option value="Absent">Absent</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-success">Mark Attendance</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>Attendance Records</h2>
+                
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label>Filter by Employee</label>
+                    <select id="filterEmployee" class="form-control" onchange="filterAttendance()">
+                        <option value="all">All Employees</option>
+                    </select>
+                </div>
+                
+                <div id="attendanceLoading" class="loading">Loading attendance records...</div>
+                <div id="attendanceEmpty" class="empty-state" style="display: none;">
+                    <span>📅</span>
+                    No attendance records found
+                </div>
+                <div id="attendanceTable" style="display: none;">
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Employee</th>
+                                    <th>Employee ID</th>
+                                    <th>Department</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="attendanceBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_BASE_URL = 'http://localhost:8000';  // Change this when deploying
+
+        // State
+        let employees = [];
+        let attendanceRecords = [];
+
+        // Helper Functions
+        function showAlert(message, type = 'success') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            alertContainer.innerHTML = '';
+            alertContainer.appendChild(alert);
+            setTimeout(() => alert.remove(), 3000);
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+        }
+
+        // Tab Switching
+        function switchTab(tabName, event) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            
+            if (tabName === 'employees') loadEmployees();
+            if (tabName === 'attendance') loadAttendanceData();
+        }
+
+        // ========== EMPLOYEE FUNCTIONS ==========
+        
+        async function loadEmployees() {
+            try {
+                document.getElementById('employeesLoading').style.display = 'block';
+                document.getElementById('employeesEmpty').style.display = 'none';
+                document.getElementById('employeesTable').style.display = 'none';
+                
+                const response = await fetch(`${API_BASE_URL}/api/employees`);
+                const result = await response.json();
+                
+                employees = result.data || [];
+                
+                if (employees.length === 0) {
+                    document.getElementById('employeesLoading').style.display = 'none';
+                    document.getElementById('employeesEmpty').style.display = 'block';
+                    return;
+                }
+                
+                const tbody = document.getElementById('employeesBody');
+                tbody.innerHTML = '';
+                
+                employees.forEach(emp => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${emp.employee_id}</td>
+                            <td>${emp.full_name}</td>
+                            <td>${emp.email}</td>
+                            <td>${emp.department}</td>
+                            <td>
+                                <button class="btn btn-danger btn-sm" onclick="deleteEmployee('${emp._id}')">Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                document.getElementById('employeesLoading').style.display = 'none';
+                document.getElementById('employeesTable').style.display = 'block';
+                
+                // Update attendance dropdowns
+                updateEmployeeDropdowns();
+                
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Failed to load employees', 'error');
+                document.getElementById('employeesLoading').style.display = 'none';
+            }
+        }
+
+        async function addEmployee(event) {
+            event.preventDefault();
+            
+            const employeeData = {
+                employee_id: document.getElementById('employeeId').value,
+                full_name: document.getElementById('fullName').value,
+                email: document.getElementById('email').value,
+                department: document.getElementById('department').value
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/employees`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(employeeData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showAlert('Employee added successfully!');
+                    document.getElementById('employeeForm').reset();
+                    loadEmployees();
+                } else {
+                    showAlert(result.detail || 'Failed to add employee', 'error');
+                }
+            } catch (error) {
+                showAlert('Failed to add employee', 'error');
+            }
+        }
+
+        async function deleteEmployee(id) {
+            if (!confirm('Delete this employee? This will also delete all their attendance records.')) return;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/employees/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    showAlert('Employee deleted successfully!');
+                    loadEmployees();
+                    loadAttendanceData();
+                } else {
+                    const result = await response.json();
+                    showAlert(result.detail || 'Failed to delete employee', 'error');
+                }
+            } catch (error) {
+                showAlert('Failed to delete employee', 'error');
+            }
+        }
+
+        // ========== ATTENDANCE FUNCTIONS ==========
+        
+        function updateEmployeeDropdowns() {
+            const markDropdown = document.getElementById('attendanceEmployee');
+            const filterDropdown = document.getElementById('filterEmployee');
+            
+            markDropdown.innerHTML = '<option value="">Choose an employee</option>';
+            filterDropdown.innerHTML = '<option value="all">All Employees</option>';
+            
+            employees.forEach(emp => {
+                markDropdown.innerHTML += `<option value="${emp._id}">${emp.full_name} (${emp.employee_id})</option>`;
+                filterDropdown.innerHTML += `<option value="${emp._id}">${emp.full_name} (${emp.employee_id})</option>`;
+            });
+        }
+
+        async function markAttendance(event) {
+            event.preventDefault();
+            
+            const attendanceData = {
+                employee_id: document.getElementById('attendanceEmployee').value,
+                date: document.getElementById('attendanceDate').value,
+                status: document.getElementById('attendanceStatus').value
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/attendance`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(attendanceData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showAlert('Attendance marked successfully!');
+                    document.getElementById('attendanceForm').reset();
+                    document.getElementById('attendanceDate').value = new Date().toISOString().split('T')[0];
+                    loadAttendanceData();
+                } else {
+                    showAlert(result.detail || 'Failed to mark attendance', 'error');
+                }
+            } catch (error) {
+                showAlert('Failed to mark attendance', 'error');
+            }
+        }
+
+        async function loadAttendanceData() {
+            try {
+                document.getElementById('attendanceLoading').style.display = 'block';
+                document.getElementById('attendanceEmpty').style.display = 'none';
+                document.getElementById('attendanceTable').style.display = 'none';
+                
+                const response = await fetch(`${API_BASE_URL}/api/attendance`);
+                const result = await response.json();
+                attendanceRecords = result.data || [];
+                
+                filterAttendance(); // Display records
+                
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('attendanceLoading').style.display = 'none';
+            }
+        }
+
+        function filterAttendance() {
+            const employeeId = document.getElementById('filterEmployee').value;
+            
+            let filtered = attendanceRecords;
+            if (employeeId !== 'all') {
+                filtered = attendanceRecords.filter(r => r.employee_id === employeeId);
+            }
+            
+            // Sort by date (newest first)
+            filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            if (filtered.length === 0) {
+                document.getElementById('attendanceLoading').style.display = 'none';
+                document.getElementById('attendanceEmpty').style.display = 'block';
+                document.getElementById('attendanceTable').style.display = 'none';
+                return;
+            }
+            
+            const tbody = document.getElementById('attendanceBody');
+            tbody.innerHTML = '';
+            
+            filtered.forEach(record => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${formatDate(record.date)}</td>
+                        <td>${record.employee_name || 'Unknown'}</td>
+                        <td>${record.employee_details?.employee_id || 'N/A'}</td>
+                        <td>${record.employee_details?.department || 'N/A'}</td>
+                        <td><span class="badge badge-${record.status.toLowerCase()}">${record.status}</span></td>
+                    </tr>
+                `;
+            });
+            
+            document.getElementById('attendanceLoading').style.display = 'none';
+            document.getElementById('attendanceEmpty').style.display = 'none';
+            document.getElementById('attendanceTable').style.display = 'block';
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('attendanceDate').value = new Date().toISOString().split('T')[0];
+            loadEmployees();
+        });
+    </script>
+</body>
+</html>

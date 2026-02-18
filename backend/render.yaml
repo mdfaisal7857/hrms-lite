@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: hrms-lite-backend
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: MONGO_URI
+        sync: false  # You'll set this manually in Render dashboard
+      - key: DATABASE_NAME
+        value: hrms_lite
