@@ -37,7 +37,7 @@ class EmployeeInDB(EmployeeBase):
     class Config:
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
-        schema_extra = {
+         json_schema_extra = {
             "example": {
                 "employee_id": "EMP001",
                 "full_name": "John Doe",
@@ -61,7 +61,7 @@ class EmployeeResponse(EmployeeBase):
 class AttendanceBase(BaseModel):
     employee_id: str  # This will store the MongoDB ObjectId as string
     date: date
-    status: str = Field(..., regex="^(Present|Absent)$")
+    status: str = Field(..., pattern="^(Present|Absent)$")
 
 class AttendanceCreate(AttendanceBase):
     pass
